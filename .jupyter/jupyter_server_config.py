@@ -7,23 +7,26 @@ try:
 
     c = get_config()
 
+    # Root directory for notebook
+    c.ServerApp.root_dir='/'
+
     ### Password protection ###
     # http://jupyter-notebook.readthedocs.io/en/latest/security.html
     if os.environ.get('JUPYTER_NOTEBOOK_PASSWORD_DISABLED') != 'DangerZone!':
         passwd = os.environ['JUPYTER_NOTEBOOK_PASSWORD']
-        c.NotebookApp.password = IPython.lib.passwd(passwd)
+        c.ServerApp.password = IPython.lib.passwd(passwd)
     else:
-        c.NotebookApp.token = ''
-        c.NotebookApp.password = ''
+        c.ServerApp.token = ''
+        c.ServerApp.password = ''
 
     ### Make it so the default shell is bash & the prompt is not awful:
-    c.NotebookApp.terminado_settings = {'shell_command': ['/bin/bash']}
+    c.ServerApp.terminado_settings = {'shell_command': ['/bin/bash']}
 
     ### PostresContentsManager ###
     database_url = os.getenv('DATABASE_URL', None)
     if database_url:
         # Tell IPython to use PostgresContentsManager for all storage.
-        c.NotebookApp.contents_manager_class = pgcontents.PostgresContentsManager
+        c.ServerApp.contents_manager_class = pgcontents.PostgresContentsManager
 
         # Set the url for the database used to store files.  See
         # http://docs.sqlalchemy.org/en/rel_0_9/core/engines.html#postgresql
@@ -38,14 +41,6 @@ try:
 
         # Set a maximum file size, if desired.
         #c.PostgresContentsManager.max_file_size_bytes = 1000000 # 1MB File cap
-
-    ### CloudFoundry specific settings
-    vcap_application_json = os.getenv('VCAP_APPLICATION', None)
-    if vcap_application_json:
-        vcap_application = json.loads(vcap_application_json)
-        uri = vcap_application['uris'][0]
-        c.NotebookApp.allow_origin = 'https://{}'.format(uri)
-        c.NotebookApp.websocket_url = 'wss://{}:4443'.format(uri)
 
 except Exception:
     traceback.print_exc()
